@@ -5,7 +5,7 @@ import { IParseNode } from "../FormulasParser/Parser/structures/IParseNode";
 
 class App {
 
-    private testString: string = '` x ${LENGTH(GET("xD"))} D ${2}`';
+    private testString: string = '`${IF(LENGTH(GET("./path/@param")) >= 10, "More", "Less")}`';
 
     constructor() {
         const lexer: Lexer = new Lexer();
