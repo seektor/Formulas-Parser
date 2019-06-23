@@ -12,6 +12,8 @@ export class Lexer {
     private currentPosition: number;
     private isInsideFormula: boolean;
 
+    private bactickTranslation: number = 1;
+
     constructor() {
 
     }
@@ -29,8 +31,8 @@ export class Lexer {
         while (true) {
             const tokenType: TokenType = this.scan();
             tokens.push({
-                columnFrom: this.startPosition,
-                columnTo: this.currentPosition,
+                columnFrom: this.startPosition + this.bactickTranslation,
+                columnTo: this.currentPosition + this.bactickTranslation,
                 lexeme: this.text.substring(this.startPosition, this.currentPosition),
                 type: tokenType
             })
@@ -214,6 +216,6 @@ export class Lexer {
     }
 
     private error(msg: string): void {
-        throw new Error(`${msg} '${this.text[this.currentPosition]}' At line ${this.currentPosition}.`);
+        throw new Error(`Lexer error! ${msg} '${this.text[this.currentPosition]}' At line ${this.currentPosition + this.bactickTranslation}.`);
     }
 }
