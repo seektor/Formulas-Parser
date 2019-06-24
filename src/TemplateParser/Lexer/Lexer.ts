@@ -20,11 +20,11 @@ export class Lexer {
 
     public process(template: string): IToken[] {
         if (template.charCodeAt(0) !== CharacterCodes.backtick || template.charCodeAt(template.length - 1) !== CharacterCodes.backtick) {
-            return [];
+            throw new Error(`Template has to start and end with backtick! - '${template}'`);
         };
         this.text = template.slice(1, -1);
         this.currentPosition = 0;
-        this.isInsideFormula = false;
+        this.isInsideFormula = this.text.charCodeAt(0) === CharacterCodes.$ ? true : false;
         const tokens: IToken[] = [];
 
         this.textEndPosition = this.text.length;
@@ -125,7 +125,7 @@ export class Lexer {
                         while (this.currentPosition < this.textEndPosition && this.isIdentifierPart(this.text.charCodeAt(this.currentPosition))) {
                             this.currentPosition++;
                         }
-                        return this.getIdentifierToken();
+                        return this.getVariableToken();
                     }
                     this.error('Invalid character!');
                     this.currentPosition++;
@@ -156,14 +156,14 @@ export class Lexer {
         return this.text.substring(start, this.currentPosition);
     }
 
-    private scanStringUntilFormula(): TokenType.StringLiteral {
+    private scanStringUntilFormula(): TokenType.TemplateLiteral {
         while (true) {
             if (this.currentPosition >= this.textEndPosition) {
-                return TokenType.StringLiteral;
+                return TokenType.TemplateLiteral;
             }
             if (this.text.charCodeAt(this.currentPosition) === CharacterCodes.$ && this.text.charCodeAt(this.currentPosition + 1) === CharacterCodes.openBrace) {
                 this.isInsideFormula = true;
-                return TokenType.StringLiteral;
+                return TokenType.TemplateLiteral;
             }
             this.currentPosition++;
         }
@@ -185,13 +185,13 @@ export class Lexer {
         }
     }
 
-    private getIdentifierToken(): KeywordTokenType | TokenType.Identifier {
+    private getVariableToken(): KeywordTokenType | TokenType.Variable {
         let keywordLiteral: string = this.text.slice(this.startPosition, this.currentPosition);
         const keyword: KeywordTokenType | undefined = textToKeyword[keywordLiteral];
         if (keyword) {
             return textToKeyword[keywordLiteral];
         }
-        return TokenType.Identifier;
+        return TokenType.Variable;
     }
 
     private isIdentifierStart(char: number): boolean {

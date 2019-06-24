@@ -71,8 +71,8 @@ export class Parser {
             }
             const currentToken: IToken = this.tokens[this.currentIndex];
             switch (currentToken.type) {
-                case TokenType.StringLiteral:
-                    parsedNodes.push(this.parseStringLiteralToken());
+                case TokenType.TemplateLiteral:
+                    parsedNodes.push(this.parseTemplateLiteralToken());
                     break;
                 case TokenType.DollarBraceToken:
                     parsedNodes.push(this.parseFormula());
@@ -188,7 +188,7 @@ export class Parser {
             columnFrom: token.columnFrom,
             columnTo: this.currentIndex,
             type: ParseNodeType.IfKeyword,
-            value: this.text.slice(token.columnFrom, this.currentIndex)
+            value: this.text.slice(token.columnFrom, this.tokens[closingParenTokenIndex].columnTo)
         }
     }
 
@@ -242,6 +242,9 @@ export class Parser {
         if (this.isFunctionKeyword(token.type)) {
             return this.keywordToParserMap.get(token.type)();
         }
+        if (token.type === TokenType.IfKeyword) {
+            return this.parseIfKeyword();
+        }
         this.error('Token is not of value type!', token.columnFrom);
     }
 
@@ -258,7 +261,7 @@ export class Parser {
             this.error('Get argument should be of string type', argumentToken.columnFrom);
         }
         this.currentIndex += 2;
-        const argument: IParseNode = this.parseStringLiteralToken();
+        const argument: IParseNode = this.parseVariableToken();
         this.currentIndex++;
         return {
             children: [argument],
@@ -269,12 +272,24 @@ export class Parser {
         }
     }
 
+    private parseVariableToken(): IParseNode {
+        const token: IToken = this.tokens[this.currentIndex];
+        this.currentIndex++;
+        return {
+            children: [],
+            columnFrom: token.columnFrom,
+            columnTo: token.columnTo,
+            type: ParseNodeType.Variable,
+            value: this.text.slice(token.columnFrom, token.columnTo)
+        }
+    }
+
     private parseLengthKeyword(): IParseNode {
         const token: IToken = this.tokens[this.currentIndex];
         const openParenToken: IToken | undefined = this.tokens[this.currentIndex + 1];
         const argumentToken: IToken | undefined = this.tokens[this.currentIndex + 2];
         if (argumentToken && argumentToken.type !== TokenType.GetKeyword) {
-            this.error('Length function has to take a GET function argument!', argumentToken.columnFrom);
+            this.error('LENGTH function has to take a GET function argument!', argumentToken.columnFrom);
         }
         this.currentIndex += 2;
         const argument: IParseNode = this.parseGetKeyword();
@@ -293,10 +308,23 @@ export class Parser {
         }
     }
 
-    private parseStringLiteralToken(stripQuotes?: boolean): IParseNode {
+    private parseTemplateLiteralToken(): IParseNode {
         const token: IToken = this.tokens[this.currentIndex];
         this.currentIndex++;
-        const value: string = stripQuotes ? this.text.slice(token.columnFrom + 1, token.columnTo - 1) : this.text.slice(token.columnFrom, token.columnTo);
+        const value: string = this.text.slice(token.columnFrom, token.columnTo);
+        return {
+            children: [],
+            columnFrom: token.columnFrom,
+            columnTo: token.columnTo,
+            type: ParseNodeType.TemplateLiteral,
+            value: value
+        }
+    }
+
+    private parseStringLiteralToken(): IParseNode {
+        const token: IToken = this.tokens[this.currentIndex];
+        this.currentIndex++;
+        const value: string = this.text.slice(token.columnFrom, token.columnTo);
         return {
             children: [],
             columnFrom: token.columnFrom,

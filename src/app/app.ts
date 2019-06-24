@@ -1,21 +1,12 @@
-import { Lexer } from "../FormulasParser/Lexer/Lexer";
-import { IToken } from "../FormulasParser/Lexer/structures/IToken";
-import { Parser } from "../FormulasParser/Parser/Parser";
-import { IParseNode } from "../FormulasParser/Parser/structures/IParseNode";
+import { TemplateParser } from "../TemplateParser/TemplateParser";
 
 class App {
 
-    private testString: string = '`${IF(LENGTH(GET("./path/@param")) >= 10, "More", "Less")}`';
+    private testString: string = '`${IF(LENGTH(GET("STRING_PATH")), GET("STRING_ABC"), IF(5 > 2, 5, 2))}`';
 
     constructor() {
-        const lexer: Lexer = new Lexer();
-        const tokens: IToken[] = lexer.process(this.testString);
-        console.log(tokens);
-
-        const parser: Parser = new Parser();
-        const ast: IParseNode = parser.process(this.testString, tokens);
-        console.log(ast);
-
+        const templateParser: TemplateParser = new TemplateParser();
+        templateParser.process(this.testString);
     }
 }
 
