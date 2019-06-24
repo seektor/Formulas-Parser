@@ -2,7 +2,6 @@ import { Lexer } from "./Lexer/Lexer";
 import { IToken } from "./Lexer/structures/IToken";
 import { Parser } from "./Parser/Parser";
 import { IParseNode } from "./Parser/structures/IParseNode";
-import FormulaSubFunctions from "./structures/FormulaSubFunctions";
 import { ITranspiledTemplate } from "./Structures/ITranspiledTemplate";
 import { Transpiler } from "./Transpiler/Transpiler";
 
@@ -18,21 +17,22 @@ export class TemplateParser {
         this.transpiler = new Transpiler();
     }
 
-    public process(template: string): Function {
+    public process(template: string): ITranspiledTemplate {
         const tokens: IToken[] = this.lexer.process(template);
-        console.log('Tokens: ', tokens);
+        // console.log('Tokens: ', tokens);
 
-        console.log('=== === ===');
+        // console.log('=== === ===');
 
         const ast: IParseNode = this.parser.process(template, tokens);
-        console.log('ParseNodes: ', ast);
+        // console.log('ParseNodes: ', ast);
 
-        console.log('=== === ===');
+        // console.log('=== === ===');
 
         const transpiledTemplate: ITranspiledTemplate = this.transpiler.process(ast);
-        console.log('Template function: ', transpiledTemplate);
-        console.log('Result: ', transpiledTemplate.func(FormulaSubFunctions));
+        // console.log('Template function: ', transpiledTemplate.func);
+        // console.log('Variables', transpiledTemplate.variableNames);
+        // console.log('Result: ', transpiledTemplate.func(FormulaSubFunctions));
 
-        return () => { }
+        return transpiledTemplate;
     }
 }

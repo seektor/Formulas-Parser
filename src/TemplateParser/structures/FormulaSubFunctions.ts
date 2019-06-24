@@ -10,10 +10,13 @@ const getFunction: Function = (identifier: FakeVariableNames): unknown => {
             return FakeVariable.STRING_ABC;
         case "STRING_PATH":
             return FakeVariable.STRING_PATH;
+        case "ARR":
+            return FakeVariable.ARR;
         default:
             return "Undefined Variable"
     }
 };
+
 const lengthFunction: Function = (argument: string | unknown[]): number => (argument || []).length;
 
 export type IFormulaSubFunctions = Map<SubFunctionName, Function>;

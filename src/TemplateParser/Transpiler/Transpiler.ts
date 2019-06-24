@@ -14,7 +14,10 @@ export class Transpiler {
     public process(parseNode: IParseNode): ITranspiledTemplate {
         const templateStringNode: IParseNode = parseNode.children[0];
         if (templateStringNode.type !== ParseNodeType.TemplateString) {
-            throw new Error('Missing template string node!');
+            return {
+                func: () => '',
+                variableNames: []
+            }
         }
         this.variableNames = [];
         const functionBody: string = this.buildFunctionBody(templateStringNode);
@@ -62,7 +65,7 @@ export class Transpiler {
 
     private resolveGetCall(parseNode: IParseNode): string {
         const variableNode: IParseNode = parseNode.children[0];
-        this.variableNames.push(variableNode.value);
+        this.variableNames.push(variableNode.value.slice(1, -1));
         return `${this.subFunctionsArgName}.get('${SubFunctionName.Get}')(${variableNode.value})`;
     }
 
