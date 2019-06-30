@@ -24,7 +24,7 @@ export class Lexer {
         };
         this.text = template.slice(1, -1);
         this.currentPosition = 0;
-        this.isInsideFormula = this.text.charCodeAt(0) === CharacterCodes.$ ? true : false;
+        this.isInsideFormula = this.text.charCodeAt(0) === CharacterCodes.$;
         const tokens: IToken[] = [];
 
         this.textEndPosition = this.text.length;

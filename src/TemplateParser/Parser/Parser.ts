@@ -147,6 +147,10 @@ export class Parser {
                 case TokenType.IfKeyword:
                     parsedNodes.push(this.parseIfKeyword());
                     break;
+                case TokenType.TrueKeyword:
+                case TokenType.FalseKeyword:
+                    parsedNodes.push(this.parseBoolean());
+                    break;
                 default:
                     this.error(`Unexpected formula body token value - '${currentToken.lexeme}'!`, currentToken.columnFrom);
                     break;
@@ -156,6 +160,18 @@ export class Parser {
             this.error('Formula cannot accept more than 1 argument!', parsedNodes[1].columnFrom);
         }
         return parsedNodes;
+    }
+
+    private parseBoolean(): IParseNode {
+        const token: IToken = this.tokens[this.currentIndex];
+        this.currentIndex++;
+        return {
+            children: [],
+            columnFrom: token.columnFrom,
+            columnTo: token.columnTo,
+            type: token.lexeme === 'TRUE' ? ParseNodeType.TrueKeyword : ParseNodeType.FalseKeyword,
+            value: token.lexeme
+        };
     }
 
     private parseIfKeyword(): IParseNode {
@@ -228,7 +244,7 @@ export class Parser {
             columnTo: token.columnTo,
             type: this.comparatorStringToType.get(token.lexeme),
             value: token.lexeme
-        }
+        };
     }
 
     private parseValueToken(): IParseNode {
@@ -238,6 +254,9 @@ export class Parser {
         }
         if (token.type === TokenType.NumericLiteral) {
             return this.parseNumericLiteralToken();
+        }
+        if (this.isBooleanKeyword(token.type)) {
+            return this.parseBoolean();
         }
         if (this.isFunctionKeyword(token.type)) {
             return this.keywordToParserMap.get(token.type)();
@@ -378,6 +397,10 @@ export class Parser {
 
     private isFunctionKeyword(tokenType: TokenType): boolean {
         return tokenType === TokenType.LengthKeyword || tokenType === TokenType.GetKeyword;
+    }
+
+    private isBooleanKeyword(tokenType: TokenType): boolean {
+        return tokenType === TokenType.TrueKeyword || tokenType === TokenType.FalseKeyword;
     }
 
     private isComparatorToken(tokenType: TokenType): boolean {

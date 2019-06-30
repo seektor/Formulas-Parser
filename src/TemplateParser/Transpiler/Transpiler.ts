@@ -1,8 +1,8 @@
-import { IParseNode } from "../Parser/structures/IParseNode";
-import { ParseNodeType } from "../Parser/structures/ParseNodeType";
-import { ITemplateFunction } from "../structures/ITemplateFunction";
-import { ITranspiledTemplate } from "../structures/ITranspiledTemplate";
-import { SubFunctionName } from "./structures/SubFunctionName";
+import { IParseNode } from '../Parser/structures/IParseNode';
+import { ParseNodeType } from '../Parser/structures/ParseNodeType';
+import { ITemplateFunction } from '../structures/ITemplateFunction';
+import { ITranspiledTemplate } from '../structures/ITranspiledTemplate';
+import { SubFunctionName } from './structures/SubFunctionName';
 
 export class Transpiler {
 
@@ -29,13 +29,17 @@ export class Transpiler {
     }
 
     private buildFunctionBody(parseNode: IParseNode): string {
-        let value: string = '';
-        parseNode.children.forEach((childNode: IParseNode) => {
-            const resolvedValue: string = this.resolveNode(childNode);
-            value += `$\{${resolvedValue}}`;
-        });
-        let valueDefinition: string = `let value = \`${value}\`;`;
-        return `${valueDefinition} return value;`
+        const pretranspiledNodes: IParseNode[] = parseNode.children;
+        let value: unknown;
+        if (pretranspiledNodes.length === 1) {
+            value = this.resolveNode(pretranspiledNodes[0]);
+        } else {
+            const valueBody: string = parseNode.children.reduce((result: string, node: IParseNode) => {
+                return result += `\${${this.resolveNode(node).toString()}}`;
+            }, '');
+            value = `\`${valueBody}\``;
+        }
+        return `return ${value};`;
     }
 
     private resolveNode(parseNode: IParseNode): string {
@@ -54,19 +58,22 @@ export class Transpiler {
                 return this.resolveLengthCall(parseNode);
             case ParseNodeType.IfKeyword:
                 return this.resolveIfKeyword(parseNode);
+            case ParseNodeType.TrueKeyword:
+            case ParseNodeType.FalseKeyword:
+                return this.resolveBooleanKeyword(parseNode);
             default:
                 throw new Error('Invalid parseNode type!');
         }
     }
 
     private resolveLengthCall(parseNode: IParseNode): string {
-        return `${this.subFunctionsArgName}.get('${SubFunctionName.Length}')(${this.resolveNode(parseNode.children[0])})`;
+        return `${this.subFunctionsArgName}.${SubFunctionName.Length}(${this.resolveNode(parseNode.children[0])})`;
     }
 
     private resolveGetCall(parseNode: IParseNode): string {
         const variableNode: IParseNode = parseNode.children[0];
         this.variableNames.push(variableNode.value.slice(1, -1));
-        return `${this.subFunctionsArgName}.get('${SubFunctionName.Get}')(${variableNode.value})`;
+        return `${this.subFunctionsArgName}.${SubFunctionName.Get}(${variableNode.value})`;
     }
 
     private resolveNumericLiteral(parseNode: IParseNode): string {
@@ -78,7 +85,7 @@ export class Transpiler {
     }
 
     private resolveTemplateLiteral(parseNode: IParseNode): string {
-        return `'${parseNode.value}'`;
+        return `"${parseNode.value}"`;
     }
 
     private resolveIfKeyword(parseNode: IParseNode): string {
@@ -94,6 +101,10 @@ export class Transpiler {
         } else {
             return this.resolveNode(parseNode);
         }
+    }
+
+    private resolveBooleanKeyword(parseNode: IParseNode): string {
+        return parseNode.type === ParseNodeType.TrueKeyword ? 'true' : 'false';
     }
 
     private resolveBinaryExpression(parseNode: IParseNode): string {
