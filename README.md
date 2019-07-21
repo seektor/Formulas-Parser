@@ -47,7 +47,7 @@ Returns either the onTrue or onFalse depending on the condition.
 * **VALUE EXPRESSION** *onFalse*
 
 ### Example:
-`"${LENGTH( ${GET('VAR_1')} )}"`
+`"${IF(LENGTH( GET('VAR_1') ) >= 5, 'More', 'Less')}"`
 
 # BinaryExpressions
 Supported comparators:
