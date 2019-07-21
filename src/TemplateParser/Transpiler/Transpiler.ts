@@ -17,7 +17,7 @@ export class Transpiler {
             return {
                 func: () => '',
                 variableNames: []
-            }
+            };
         }
         this.variableNames = [];
         const functionBody: string = this.buildFunctionBody(templateStringNode);
@@ -71,7 +71,7 @@ export class Transpiler {
     }
 
     private resolveGetCall(parseNode: IParseNode): string {
-        const variableNode: IParseNode = parseNode.children[0];
+        const [variableNode] = parseNode.children;
         this.variableNames.push(variableNode.value.slice(1, -1));
         return `${this.subFunctionsArgName}.${SubFunctionName.Get}(${variableNode.value})`;
     }
@@ -89,9 +89,7 @@ export class Transpiler {
     }
 
     private resolveIfKeyword(parseNode: IParseNode): string {
-        const condition: IParseNode = parseNode.children[0];
-        const onTrue: IParseNode = parseNode.children[1];
-        const onFalse: IParseNode = parseNode.children[2];
+        const [condition, onTrue, onFalse] = parseNode.children;
         return `${this.resolveIfCondition(condition)} ? ${this.resolveNode(onTrue)} : ${this.resolveNode(onFalse)}`;
     }
 
@@ -108,6 +106,7 @@ export class Transpiler {
     }
 
     private resolveBinaryExpression(parseNode: IParseNode): string {
-        return `${this.resolveNode(parseNode.children[0])} ${this.resolveStringLiteral(parseNode.children[1])} ${this.resolveNode(parseNode.children[2])}`;
+        const [firstArg, comparator, secondArg] = parseNode.children;
+        return `${this.resolveNode(firstArg)} ${this.resolveStringLiteral(comparator)} ${this.resolveNode(secondArg)}`;
     }
 }

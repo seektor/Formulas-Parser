@@ -6,6 +6,6 @@ export const textToKeyword: MapLike<KeywordTokenType> = {
     IF: TokenType.IfKeyword,
     GET: TokenType.GetKeyword,
     LENGTH: TokenType.LengthKeyword,
-    TRUE: TokenType.TrueKeyword,
-    FALSE: TokenType.FalseKeyword,
+    true: TokenType.TrueKeyword,
+    false: TokenType.FalseKeyword,
 }

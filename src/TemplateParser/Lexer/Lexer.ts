@@ -12,17 +12,10 @@ export class Lexer {
     private currentPosition: number;
     private isInsideFormula: boolean;
 
-    private bactickTranslation: number = 1;
-
-    constructor() {
-
-    }
+    constructor() { }
 
     public process(template: string): IToken[] {
-        if (template.charCodeAt(0) !== CharacterCodes.backtick || template.charCodeAt(template.length - 1) !== CharacterCodes.backtick) {
-            throw new Error(`Template has to start and end with backtick! - '${template}'`);
-        };
-        this.text = template.slice(1, -1);
+        this.text = template;
         this.currentPosition = 0;
         this.isInsideFormula = this.text.charCodeAt(0) === CharacterCodes.$;
         const tokens: IToken[] = [];
@@ -31,11 +24,11 @@ export class Lexer {
         while (true) {
             const tokenType: TokenType = this.scan();
             tokens.push({
-                columnFrom: this.startPosition + this.bactickTranslation,
-                columnTo: this.currentPosition + this.bactickTranslation,
+                columnFrom: this.startPosition,
+                columnTo: this.currentPosition,
                 lexeme: this.text.substring(this.startPosition, this.currentPosition),
                 type: tokenType
-            })
+            });
             if (tokenType === TokenType.EndOfFileToken) {
                 break;
             }
@@ -216,6 +209,6 @@ export class Lexer {
     }
 
     private error(msg: string): void {
-        throw new Error(`Lexer error! ${msg} '${this.text[this.currentPosition]}' At line ${this.currentPosition + this.bactickTranslation}.`);
+        throw new Error(`Lexer error! ${msg} '${this.text[this.currentPosition]}' At line ${this.currentPosition}.`);
     }
 }

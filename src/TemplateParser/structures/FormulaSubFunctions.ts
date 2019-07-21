@@ -19,9 +19,9 @@ const getFunction: Function = (identifier: FakeVariableNames): unknown => {
 
 const lengthFunction: Function = (argument: string | unknown[]): number => (argument || []).length;
 
-export type IFormulaSubFunctions = Map<SubFunctionName, Function>;
+export type IFormulaSubFunctions = { [key in keyof typeof SubFunctionName]: Function };
 
-export default new Map([
-    [SubFunctionName.Get, getFunction],
-    [SubFunctionName.Length, lengthFunction]
-])
+export default {
+    [SubFunctionName.Get]: getFunction,
+    [SubFunctionName.Length]: lengthFunction
+} as unknown as IFormulaSubFunctions;

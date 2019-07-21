@@ -23,9 +23,7 @@ export class Parser {
         ['>=', ParseNodeType.GreaterThanEqualsToken]
     ]);
 
-    constructor() {
-
-    }
+    constructor() { }
 
     public process(template: string, tokens: IToken[]): IParseNode {
         this.text = template;
@@ -34,7 +32,7 @@ export class Parser {
         this.lastIndex = this.tokens.length - 1;
         const ast: IParseNode = this.parseSourceFile();
         if (this.currentIndex < this.lastIndex) {
-            this.error('Not all tokens have been parsed!?', 0);
+            this.error('Not all of the tokens have been parsed!?', 0);
         }
         return ast;
     }
@@ -60,7 +58,7 @@ export class Parser {
             type: ParseNodeType.SourceFile,
             value: this.text.slice(this.tokens[0].columnFrom, endOfFileToken.columnTo),
             children: parsedNodes
-        }
+        };
     }
 
     private parseTemplateToken(): IParseNode {
@@ -101,7 +99,7 @@ export class Parser {
             columnTo: token.columnTo,
             type: ParseNodeType.EndOfFileToken,
             value: ''
-        }
+        };
     }
 
     private parseFormula(): IParseNode {
@@ -114,22 +112,19 @@ export class Parser {
         const formulaEndToken: IToken = this.tokens[formulaEndTokenIndex];
         this.currentIndex++;
         const formulaNode: IParseNode = {
-            children: this.parseFormulaBody(formulaEndTokenIndex),
+            children: [this.parseFormulaBody(formulaEndTokenIndex)],
             columnFrom: token.columnFrom,
             columnTo: formulaEndToken.columnTo,
             type: ParseNodeType.Formula,
             value: this.text.slice(token.columnFrom, formulaEndToken.columnTo)
-        }
+        };
         this.currentIndex = formulaEndTokenIndex + 1;
         return formulaNode;
     }
 
-    private parseFormulaBody(toTokenIndex: number): IParseNode[] {
+    private parseFormulaBody(toTokenIndex: number): IParseNode {
         const parsedNodes: IParseNode[] = [];
-        while (true) {
-            if (this.currentIndex >= toTokenIndex) {
-                break;
-            }
+        while (this.currentIndex < toTokenIndex) {
             const currentToken: IToken = this.tokens[this.currentIndex];
             switch (currentToken.type) {
                 case TokenType.StringLiteral:
@@ -159,7 +154,7 @@ export class Parser {
         if (parsedNodes.length > 1) {
             this.error('Formula cannot accept more than 1 argument!', parsedNodes[1].columnFrom);
         }
-        return parsedNodes;
+        return parsedNodes[0];
     }
 
     private parseBoolean(): IParseNode {
@@ -169,7 +164,7 @@ export class Parser {
             children: [],
             columnFrom: token.columnFrom,
             columnTo: token.columnTo,
-            type: token.lexeme === 'TRUE' ? ParseNodeType.TrueKeyword : ParseNodeType.FalseKeyword,
+            type: token.lexeme === 'true' ? ParseNodeType.TrueKeyword : ParseNodeType.FalseKeyword,
             value: token.lexeme
         };
     }
@@ -179,11 +174,21 @@ export class Parser {
         const openParenToken: IToken | undefined = this.tokens[this.currentIndex + 1];
         this.currentIndex += 2;
         const closingParenTokenIndex: number | null = this.findClosingToken(TokenType.CloseParenthesisToken, this.currentIndex + 1, TokenType.OpenParenthesisToken);
-        if ((openParenToken && openParenToken.type !== TokenType.OpenParenthesisToken) || closingParenTokenIndex === null) {
-            this.error('Invalid IF parentheses!', openParenToken.columnFrom);
-        }
-        const firstCommaIndex: number | null = this.findTokenIndexFrom(TokenType.CommaToken, this.currentIndex);
-        const secondCommaIndex: number | null = this.findTokenIndexFrom(TokenType.CommaToken, (firstCommaIndex || this.currentIndex) + 1);
+        if (
+            (openParenToken && openParenToken.type !== TokenType.OpenParenthesisToken) ||
+            closingParenTokenIndex === null
+        ) { this.error('Invalid IF parentheses!', openParenToken.columnFrom); }
+        const firstCommaIndex: number | null = this.findSameParenTokenIndexFrom(TokenType.CommaToken,
+            this.currentIndex,
+            TokenType.OpenParenthesisToken,
+            TokenType.CloseParenthesisToken
+        );
+        const secondCommaIndex: number | null = this.findSameParenTokenIndexFrom(
+            TokenType.CommaToken,
+            (firstCommaIndex || this.currentIndex) + 1,
+            TokenType.OpenParenthesisToken,
+            TokenType.CloseParenthesisToken
+        );
         if (firstCommaIndex === null || secondCommaIndex === null || secondCommaIndex > closingParenTokenIndex) {
             this.error('Missing IF arguments!', token.columnFrom);
         }
@@ -205,7 +210,7 @@ export class Parser {
             columnTo: this.currentIndex,
             type: ParseNodeType.IfKeyword,
             value: this.text.slice(token.columnFrom, this.tokens[closingParenTokenIndex].columnTo)
-        }
+        };
     }
 
     private parseIfCondition(toIndex: number): IParseNode {
@@ -232,7 +237,7 @@ export class Parser {
             columnTo: rightNode.columnTo,
             type: ParseNodeType.BinaryExpression,
             value: this.text.slice(leftNode.columnFrom, rightNode.columnTo)
-        }
+        };
     }
 
     private parseComparatorToken(): IParseNode {
@@ -264,7 +269,7 @@ export class Parser {
         if (token.type === TokenType.IfKeyword) {
             return this.parseIfKeyword();
         }
-        this.error('Token is not of value type!', token.columnFrom);
+        this.error(`'${token.lexeme}' - Is not a valid value type token!`, token.columnFrom);
     }
 
     private parseGetKeyword(): IParseNode {
@@ -288,7 +293,7 @@ export class Parser {
             columnTo: closeParenToken.columnTo,
             type: ParseNodeType.GetCall,
             value: this.text.slice(token.columnFrom, closeParenToken.columnTo)
-        }
+        };
     }
 
     private parseVariableToken(): IParseNode {
@@ -300,7 +305,7 @@ export class Parser {
             columnTo: token.columnTo,
             type: ParseNodeType.Variable,
             value: this.text.slice(token.columnFrom, token.columnTo)
-        }
+        };
     }
 
     private parseLengthKeyword(): IParseNode {
@@ -324,7 +329,7 @@ export class Parser {
             columnTo: closeParenToken.columnTo,
             type: ParseNodeType.LengthCall,
             value: this.text.slice(token.columnFrom, closeParenToken.columnTo)
-        }
+        };
     }
 
     private parseTemplateLiteralToken(): IParseNode {
@@ -337,7 +342,7 @@ export class Parser {
             columnTo: token.columnTo,
             type: ParseNodeType.TemplateLiteral,
             value: value
-        }
+        };
     }
 
     private parseStringLiteralToken(): IParseNode {
@@ -350,7 +355,7 @@ export class Parser {
             columnTo: token.columnTo,
             type: ParseNodeType.StringLiteral,
             value: value
-        }
+        };
     }
 
     private parseNumericLiteralToken(): IParseNode {
@@ -362,7 +367,21 @@ export class Parser {
             columnTo: token.columnTo,
             type: ParseNodeType.NumericLiteral,
             value: token.lexeme
+        };
+    }
+
+    private findSameParenTokenIndexFrom(tokenType: TokenType, fromIndex: number, openingToken: TokenType, closingToken: TokenType): number | null {
+        let index: number = null;
+        for (let i = fromIndex; i < this.tokens.length; i++) {
+            const token: IToken = this.tokens[i];
+            if (token.type === openingToken) {
+                i = this.findClosingToken(closingToken, i + 1, openingToken);
+            } else if (token.type === tokenType) {
+                index = i;
+                break;
+            }
         }
+        return index;
     }
 
     private findTokenIndexFrom(tokenType: TokenType, fromIndex: number): number | null {
@@ -408,7 +427,7 @@ export class Parser {
             || tokenType === TokenType.LessThanEqualsToken
             || tokenType === TokenType.EqualityOperator
             || tokenType === TokenType.GreaterThanEqualsToken
-            || tokenType === TokenType.GreaterThanToken
+            || tokenType === TokenType.GreaterThanToken;
     }
 
     private error(msg: string, lineNumber: number): void {
